@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Dark mode toggle elements
   const darkModeToggle = document.getElementById("dark-mode-toggle");
-  const darkModeIcon = darkModeToggle.querySelector(".icon");
-  const darkModeText = darkModeToggle.querySelector("span:not(.icon)");
+  const darkModeIcon = darkModeToggle?.querySelector(".icon");
+  const darkModeText = darkModeToggle?.querySelector(".text");
 
   // DOM elements
   const activitiesList = document.getElementById("activities-list");
@@ -51,12 +51,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Dark mode functions
   function initDarkMode() {
+    if (!darkModeToggle) return;
+    
     // Check localStorage for saved preference
     const isDarkMode = localStorage.getItem("darkMode") === "true";
     if (isDarkMode) {
       document.body.classList.add("dark-mode");
-      darkModeIcon.textContent = "☀️";
-      darkModeText.textContent = "Light Mode";
+      if (darkModeIcon) darkModeIcon.textContent = "☀️";
+      if (darkModeText) darkModeText.textContent = "Light Mode";
     }
   }
 
@@ -65,18 +67,20 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Update button text and icon
     if (isDarkMode) {
-      darkModeIcon.textContent = "☀️";
-      darkModeText.textContent = "Light Mode";
+      if (darkModeIcon) darkModeIcon.textContent = "☀️";
+      if (darkModeText) darkModeText.textContent = "Light Mode";
       localStorage.setItem("darkMode", "true");
     } else {
-      darkModeIcon.textContent = "🌙";
-      darkModeText.textContent = "Dark Mode";
+      if (darkModeIcon) darkModeIcon.textContent = "🌙";
+      if (darkModeText) darkModeText.textContent = "Dark Mode";
       localStorage.setItem("darkMode", "false");
     }
   }
 
   // Event listener for dark mode toggle
-  darkModeToggle.addEventListener("click", toggleDarkMode);
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener("click", toggleDarkMode);
+  }
 
   // Time range mappings for the dropdown
   const timeRanges = {
