@@ -32,6 +32,40 @@
   --info-light: #d1ecf1;
 }
 
+/* Dark mode color palette */
+body.dark-mode {
+  /* Primary colors - adjusted for dark mode */
+  --primary: #534bae;
+  --primary-light: #7b74c9;
+  --primary-dark: #3a2d7e;
+  --primary-text: #ffffff;
+
+  /* Secondary colors */
+  --secondary: #ff8c42;
+  --secondary-light: #ffa866;
+  --secondary-dark: #d66a1f;
+  --secondary-text: #ffffff;
+
+  /* Neutral colors - dark mode specific */
+  --background: #1a1a1a;
+  --surface: #2d2d2d;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --border: #404040;
+  --border-light: #353535;
+  --border-focus: #4a4a4a;
+
+  /* Feedback colors - adjusted for dark mode */
+  --success: #4caf50;
+  --success-light: #1b5e20;
+  --warning: #ffa726;
+  --warning-light: #5d4037;
+  --error: #ef5350;
+  --error-light: #4a1414;
+  --info: #29b6f6;
+  --info-light: #0d3d4f;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -539,7 +573,8 @@ footer {
 
 .category-filters,
 .day-filters,
-.time-filters {
+.time-filters,
+.difficulty-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -547,7 +582,8 @@ footer {
 
 .category-filter,
 .day-filter,
-.time-filter {
+.time-filter,
+.difficulty-filter {
   background-color: var(--background);
   border: 1px solid var(--border);
   color: var(--text-primary);
@@ -560,7 +596,8 @@ footer {
 
 .category-filter.active,
 .day-filter.active,
-.time-filter.active {
+.time-filter.active,
+.difficulty-filter.active {
   background-color: var(--primary);
   color: white;
   border-color: var(--primary-dark);
@@ -568,12 +605,14 @@ footer {
 
 .category-filter:hover,
 .day-filter:hover,
-.time-filter:hover {
+.time-filter:hover,
+.difficulty-filter:hover {
   background-color: var(--primary-light);
   color: white;
 }
 
-.time-filters {
+.time-filters,
+.difficulty-filters {
   width: 100%;
 }
 
@@ -665,89 +704,43 @@ footer {
   background-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Social Share Buttons */
-.social-share-container {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 0;
-  border-top: 1px solid var(--border-light);
-  margin-top: 8px;
-}
-
-.share-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  margin-right: 4px;
-}
-
-.share-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background-color: var(--surface);
+/* Dark mode toggle button */
+#dark-mode-toggle {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
-  font-size: 0.9rem;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.share-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+#dark-mode-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
-.share-button.facebook {
-  background-color: #1877f2;
-  border-color: #1877f2;
-  color: white;
+#dark-mode-toggle .icon {
+  font-size: 1rem;
 }
 
-.share-button.facebook:hover {
-  background-color: #0d66d0;
+/* Dark mode specific toggle button styling */
+body.dark-mode #dark-mode-toggle {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-.share-button.twitter {
-  background-color: #000000;
-  border-color: #000000;
-  color: white;
+body.dark-mode #dark-mode-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-.share-button.twitter:hover {
-  background-color: #333333;
-}
-
-.share-button.whatsapp {
-  background-color: #25d366;
-  border-color: #25d366;
-  color: white;
-}
-
-.share-button.whatsapp:hover {
-  background-color: #1da851;
-}
-
-.share-button.linkedin {
-  background-color: #0077b5;
-  border-color: #0077b5;
-  color: white;
-}
-
-.share-button.linkedin:hover {
-  background-color: #006399;
-}
-
-.share-button.native {
-  background-color: var(--primary);
-  border-color: var(--primary);
-  color: white;
-}
-
-.share-button.native:hover {
-  background-color: var(--primary-light);
+/* Adjust toggle position when user controls are visible */
+@media (min-width: 768px) {
+  #dark-mode-toggle {
+    right: 180px;
+  }
 }
