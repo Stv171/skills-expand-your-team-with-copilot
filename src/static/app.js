@@ -472,11 +472,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Function to escape HTML to prevent XSS
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  // Function to escape HTML attribute values to prevent XSS
+  function escapeHtmlAttribute(text) {
+    // For HTML attributes, we need to escape quotes and ampersands
+    return text.replace(/&/g, '&amp;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&#39;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;');
   }
 
   // Function to create share buttons HTML
@@ -485,12 +488,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const shareText = `Check out ${activityName} at Mergington High School! ${activityDescription}`;
     const shareUrl = window.location.origin + window.location.pathname;
     
-    // Escape all data for safe HTML attribute insertion
-    const escapedActivityName = escapeHtml(activityName);
-    const escapedActivityDesc = escapeHtml(activityDescription);
-    const escapedSchedule = escapeHtml(schedule);
-    const escapedShareUrl = escapeHtml(shareUrl);
-    const escapedShareText = escapeHtml(shareText);
+    // Escape data for safe HTML attribute insertion
+    const escapedActivityName = escapeHtmlAttribute(activityName);
+    const escapedActivityDesc = escapeHtmlAttribute(activityDescription);
+    const escapedSchedule = escapeHtmlAttribute(schedule);
+    const escapedShareUrl = escapeHtmlAttribute(shareUrl);
+    const escapedShareText = escapeHtmlAttribute(shareText);
     
     // Check if native share is available (typically on mobile)
     const hasNativeShare = navigator.share !== undefined;
