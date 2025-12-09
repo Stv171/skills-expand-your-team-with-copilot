@@ -472,6 +472,110 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Function to create share buttons HTML
+  function createShareButtons(activityName, activityDescription, schedule) {
+    // Create share text and URL
+    const shareText = `Check out ${activityName} at Mergington High School! ${activityDescription}`;
+    const shareUrl = window.location.origin + window.location.pathname;
+    
+    // Encode for URLs
+    const encodedText = encodeURIComponent(shareText);
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedActivityName = encodeURIComponent(activityName);
+    
+    // Check if native share is available (typically on mobile)
+    const hasNativeShare = navigator.share !== undefined;
+    
+    let shareButtonsHtml = `
+      <div class="social-share-container">
+        <span class="share-label">Share:</span>
+    `;
+    
+    // Native share button for mobile devices
+    if (hasNativeShare) {
+      shareButtonsHtml += `
+        <button class="share-button native tooltip" data-share-type="native" data-activity-name="${activityName}" data-activity-desc="${activityDescription.replace(/"/g, '&quot;')}" data-schedule="${schedule.replace(/"/g, '&quot;')}">
+          📤
+          <span class="tooltip-text">Share activity</span>
+        </button>
+      `;
+    }
+    
+    // Social platform buttons
+    shareButtonsHtml += `
+      <button class="share-button facebook tooltip" data-share-type="facebook" data-share-url="${shareUrl}" data-share-text="${shareText.replace(/"/g, '&quot;')}">
+        f
+        <span class="tooltip-text">Share on Facebook</span>
+      </button>
+      <button class="share-button twitter tooltip" data-share-type="twitter" data-share-url="${shareUrl}" data-share-text="${shareText.replace(/"/g, '&quot;')}">
+        𝕏
+        <span class="tooltip-text">Share on X</span>
+      </button>
+      <button class="share-button whatsapp tooltip" data-share-type="whatsapp" data-share-url="${shareUrl}" data-share-text="${shareText.replace(/"/g, '&quot;')}">
+        💬
+        <span class="tooltip-text">Share on WhatsApp</span>
+      </button>
+      <button class="share-button linkedin tooltip" data-share-type="linkedin" data-share-url="${shareUrl}" data-share-text="${shareText.replace(/"/g, '&quot;')}">
+        in
+        <span class="tooltip-text">Share on LinkedIn</span>
+      </button>
+    </div>
+    `;
+    
+    return shareButtonsHtml;
+  }
+
+  // Handle social share button clicks
+  function handleShareClick(event) {
+    const button = event.currentTarget;
+    const shareType = button.dataset.shareType;
+    const shareUrl = button.dataset.shareUrl;
+    const shareText = button.dataset.shareText;
+    
+    if (shareType === "native") {
+      // Use native share API
+      const activityName = button.dataset.activityName;
+      const activityDesc = button.dataset.activityDesc;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: `${activityName} - Mergington High School`,
+          text: `Check out ${activityName}! ${activityDesc}`,
+          url: window.location.origin + window.location.pathname,
+        })
+        .then(() => {
+          console.log("Successfully shared");
+        })
+        .catch((error) => {
+          console.log("Error sharing:", error);
+        });
+      }
+    } else {
+      // Use platform-specific share URLs
+      let shareWindowUrl = "";
+      
+      switch (shareType) {
+        case "facebook":
+          shareWindowUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+          break;
+        case "twitter":
+          shareWindowUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+          break;
+        case "whatsapp":
+          shareWindowUrl = `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
+          break;
+        case "linkedin":
+          shareWindowUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+          break;
+      }
+      
+      if (shareWindowUrl) {
+        // Open in a popup window
+        window.open(shareWindowUrl, "_blank", "width=600,height=400");
+      }
+    }
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -519,6 +623,9 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    // Create share buttons
+    const shareButtonsHtml = createShareButtons(name, details.description, formattedSchedule);
+
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
@@ -528,6 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="tooltip-text">Regular meetings at this time throughout the semester</span>
       </p>
       ${capacityIndicator}
+      ${shareButtonsHtml}
       <div class="participants-list">
         <h5>Current Participants:</h5>
         <ul>
@@ -575,6 +683,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
     deleteButtons.forEach((button) => {
       button.addEventListener("click", handleUnregister);
+    });
+
+    // Add click handlers for share buttons
+    const shareButtons = activityCard.querySelectorAll(".share-button");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", handleShareClick);
     });
 
     // Add click handler for register button (only when authenticated)
