@@ -539,6 +539,148 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Function to escape HTML attribute values to prevent XSS
+  function escapeHtmlAttribute(text) {
+    // For HTML attributes, we need to escape quotes and ampersands
+    return text.replace(/&/g, '&amp;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&#39;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;');
+  }
+
+  // Function to create share buttons HTML
+  function createShareButtons(activityName, activityDescription, schedule) {
+    // Create share text and URL
+    const shareText = `Check out ${activityName} at Mergington High School! ${activityDescription}`;
+    const shareUrl = window.location.origin + window.location.pathname;
+    
+    // Escape data for safe HTML attribute insertion
+    const escapedActivityName = escapeHtmlAttribute(activityName);
+    const escapedActivityDesc = escapeHtmlAttribute(activityDescription);
+    const escapedSchedule = escapeHtmlAttribute(schedule);
+    const escapedShareUrl = escapeHtmlAttribute(shareUrl);
+    const escapedShareText = escapeHtmlAttribute(shareText);
+    
+    // Check if native share is available (typically on mobile)
+    const hasNativeShare = navigator.share !== undefined;
+    
+    let shareButtonsHtml = `
+      <div class="social-share-container">
+        <span class="share-label">Share:</span>
+    `;
+    
+    // Native share button for mobile devices
+    if (hasNativeShare) {
+      shareButtonsHtml += `
+        <button class="share-button native tooltip" data-share-type="native" data-activity-name="${escapedActivityName}" data-activity-desc="${escapedActivityDesc}" data-schedule="${escapedSchedule}">
+          📤
+          <span class="tooltip-text">Share activity</span>
+        </button>
+      `;
+    }
+    
+    // Social platform buttons
+    shareButtonsHtml += `
+      <button class="share-button facebook tooltip" data-share-type="facebook" data-share-url="${escapedShareUrl}" data-share-text="${escapedShareText}">
+        f
+        <span class="tooltip-text">Share on Facebook</span>
+      </button>
+      <button class="share-button twitter tooltip" data-share-type="twitter" data-share-url="${escapedShareUrl}" data-share-text="${escapedShareText}">
+        𝕏
+        <span class="tooltip-text">Share on X</span>
+      </button>
+      <button class="share-button whatsapp tooltip" data-share-type="whatsapp" data-share-url="${escapedShareUrl}" data-share-text="${escapedShareText}">
+        💬
+        <span class="tooltip-text">Share on WhatsApp</span>
+      </button>
+      <button class="share-button linkedin tooltip" data-share-type="linkedin" data-share-url="${escapedShareUrl}" data-share-text="${escapedShareText}">
+        in
+        <span class="tooltip-text">Share on LinkedIn</span>
+      </button>
+    </div>
+    `;
+    
+    return shareButtonsHtml;
+  }
+
+  // Handle social share button clicks
+  function handleShareClick(event) {
+    const button = event.currentTarget;
+    const shareType = button.dataset.shareType;
+    
+    // Validate share type to prevent manipulation
+    const validShareTypes = ['native', 'facebook', 'twitter', 'whatsapp', 'linkedin'];
+    if (!validShareTypes.includes(shareType)) {
+      console.error('Invalid share type');
+      return;
+    }
+    
+    const shareUrl = button.dataset.shareUrl;
+    const shareText = button.dataset.shareText;
+    
+    if (shareType === "native") {
+      // Use native share API
+      const activityName = button.dataset.activityName;
+      const activityDesc = button.dataset.activityDesc;
+      
+      // Validate data exists
+      if (!activityName || !activityDesc) {
+        console.error('Missing activity data for native share');
+        return;
+      }
+      
+      if (navigator.share) {
+        navigator.share({
+          title: `${activityName} - Mergington High School`,
+          text: `Check out ${activityName}! ${activityDesc}`,
+          url: window.location.origin + window.location.pathname,
+        })
+        .then(() => {
+          console.log("Successfully shared");
+        })
+        .catch((error) => {
+          console.log("Error sharing:", error);
+        });
+      }
+    } else {
+      // Validate required data exists
+      if (!shareUrl || !shareText) {
+        console.error('Missing share data');
+        return;
+      }
+      
+      // Use platform-specific share URLs
+      let shareWindowUrl = "";
+      
+      switch (shareType) {
+        case "facebook":
+          shareWindowUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+          break;
+        case "twitter":
+          shareWindowUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+          break;
+        case "whatsapp":
+          shareWindowUrl = `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
+          break;
+        case "linkedin":
+          shareWindowUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+          break;
+      }
+      
+      if (shareWindowUrl) {
+        // Open in a popup window with security settings
+        const shareWindow = window.open(shareWindowUrl, "_blank", "width=600,height=400,noopener,noreferrer");
+        
+        // Handle popup blocker
+        if (!shareWindow || shareWindow.closed || typeof shareWindow.closed === 'undefined') {
+          // Popup was blocked, provide feedback
+          showMessage("Please allow popups to share activities on social media.", "info");
+        }
+      }
+    }
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -586,6 +728,9 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    // Create share buttons
+    const shareButtonsHtml = createShareButtons(name, details.description, formattedSchedule);
+
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
@@ -595,6 +740,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="tooltip-text">Regular meetings at this time throughout the semester</span>
       </p>
       ${capacityIndicator}
+      ${shareButtonsHtml}
       <div class="participants-list">
         <h5>Current Participants:</h5>
         <ul>
@@ -642,6 +788,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
     deleteButtons.forEach((button) => {
       button.addEventListener("click", handleUnregister);
+    });
+
+    // Add click handlers for share buttons
+    const shareButtons = activityCard.querySelectorAll(".share-button");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", handleShareClick);
     });
 
     // Add click handler for register button (only when authenticated)
