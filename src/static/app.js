@@ -472,16 +472,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Function to escape HTML to prevent XSS
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // Function to create share buttons HTML
   function createShareButtons(activityName, activityDescription, schedule) {
     // Create share text and URL
     const shareText = `Check out ${activityName} at Mergington High School! ${activityDescription}`;
     const shareUrl = window.location.origin + window.location.pathname;
     
-    // Encode for URLs
-    const encodedText = encodeURIComponent(shareText);
-    const encodedUrl = encodeURIComponent(shareUrl);
-    const encodedActivityName = encodeURIComponent(activityName);
+    // Escape all data for safe HTML attribute insertion
+    const escapedActivityName = escapeHtml(activityName);
+    const escapedActivityDesc = escapeHtml(activityDescription);
+    const escapedSchedule = escapeHtml(schedule);
+    const escapedShareUrl = escapeHtml(shareUrl);
+    const escapedShareText = escapeHtml(shareText);
     
     // Check if native share is available (typically on mobile)
     const hasNativeShare = navigator.share !== undefined;
@@ -494,7 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Native share button for mobile devices
     if (hasNativeShare) {
       shareButtonsHtml += `
-        <button class="share-button native tooltip" data-share-type="native" data-activity-name="${activityName}" data-activity-desc="${activityDescription.replace(/"/g, '&quot;')}" data-schedule="${schedule.replace(/"/g, '&quot;')}">
+        <button class="share-button native tooltip" data-share-type="native" data-activity-name="${escapedActivityName}" data-activity-desc="${escapedActivityDesc}" data-schedule="${escapedSchedule}">
           📤
           <span class="tooltip-text">Share activity</span>
         </button>
@@ -503,19 +512,19 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Social platform buttons
     shareButtonsHtml += `
-      <button class="share-button facebook tooltip" data-share-type="facebook" data-share-url="${shareUrl}" data-share-text="${shareText.replace(/"/g, '&quot;')}">
+      <button class="share-button facebook tooltip" data-share-type="facebook" data-share-url="${escapedShareUrl}" data-share-text="${escapedShareText}">
         f
         <span class="tooltip-text">Share on Facebook</span>
       </button>
-      <button class="share-button twitter tooltip" data-share-type="twitter" data-share-url="${shareUrl}" data-share-text="${shareText.replace(/"/g, '&quot;')}">
+      <button class="share-button twitter tooltip" data-share-type="twitter" data-share-url="${escapedShareUrl}" data-share-text="${escapedShareText}">
         𝕏
         <span class="tooltip-text">Share on X</span>
       </button>
-      <button class="share-button whatsapp tooltip" data-share-type="whatsapp" data-share-url="${shareUrl}" data-share-text="${shareText.replace(/"/g, '&quot;')}">
+      <button class="share-button whatsapp tooltip" data-share-type="whatsapp" data-share-url="${escapedShareUrl}" data-share-text="${escapedShareText}">
         💬
         <span class="tooltip-text">Share on WhatsApp</span>
       </button>
-      <button class="share-button linkedin tooltip" data-share-type="linkedin" data-share-url="${shareUrl}" data-share-text="${shareText.replace(/"/g, '&quot;')}">
+      <button class="share-button linkedin tooltip" data-share-type="linkedin" data-share-url="${escapedShareUrl}" data-share-text="${escapedShareText}">
         in
         <span class="tooltip-text">Share on LinkedIn</span>
       </button>
@@ -529,6 +538,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleShareClick(event) {
     const button = event.currentTarget;
     const shareType = button.dataset.shareType;
+    
+    // Validate share type to prevent manipulation
+    const validShareTypes = ['native', 'facebook', 'twitter', 'whatsapp', 'linkedin'];
+    if (!validShareTypes.includes(shareType)) {
+      console.error('Invalid share type');
+      return;
+    }
+    
     const shareUrl = button.dataset.shareUrl;
     const shareText = button.dataset.shareText;
     
@@ -536,6 +553,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // Use native share API
       const activityName = button.dataset.activityName;
       const activityDesc = button.dataset.activityDesc;
+      
+      // Validate data exists
+      if (!activityName || !activityDesc) {
+        console.error('Missing activity data for native share');
+        return;
+      }
       
       if (navigator.share) {
         navigator.share({
@@ -551,6 +574,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     } else {
+      // Validate required data exists
+      if (!shareUrl || !shareText) {
+        console.error('Missing share data');
+        return;
+      }
+      
       // Use platform-specific share URLs
       let shareWindowUrl = "";
       
@@ -570,8 +599,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       if (shareWindowUrl) {
-        // Open in a popup window
-        window.open(shareWindowUrl, "_blank", "width=600,height=400");
+        // Open in a popup window with security settings
+        const shareWindow = window.open(shareWindowUrl, "_blank", "width=600,height=400,noopener,noreferrer");
+        
+        // Handle popup blocker
+        if (!shareWindow || shareWindow.closed || typeof shareWindow.closed === 'undefined') {
+          // Popup was blocked, provide feedback
+          showMessage("Please allow popups to share activities on social media.", "info");
+        }
       }
     }
   }
